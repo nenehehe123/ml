@@ -1,0 +1,74 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
+from sklearn import preprocessing
+from sklearn.metrics import adjusted_rand_score, silhouette_score
+from mpl_toolkits.mplot3d import Axes3D
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Load dataset
+data = pd.read_csv('/content/drive/MyDrive/ML/ex-7.csv')
+
+# Select features
+X = data[['Age', 'Annual_Income (k$)', 'Spending_Score', 'Visit_Frequency']]
+
+# Normalize data
+scaler = preprocessing.StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Apply k-Means
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans_labels = kmeans.fit_predict(X_scaled)
+
+# Apply EM Algorithm (GMM)
+gmm = GaussianMixture(n_components=3, random_state=42)
+gmm_labels = gmm.fit_predict(X_scaled)
+
+# Assign cluster names
+data['KMeans_Cluster'] = ['Cluster ' + str(i+1) for i in kmeans_labels]
+data['GMM_Cluster'] = ['Cluster ' + str(i+1) for i in gmm_labels]
+
+# Plot clusters (2D and 3D)
+plt.figure(figsize=(18, 7))
+
+# k-Means 2D
+plt.subplot(1, 3, 1)
+plt.scatter(X['Age'], X['Annual_Income (k$)'], c=kmeans_labels, cmap='viridis', s=40)
+plt.title("KMeans Clustering")
+plt.xlabel("Age")
+plt.ylabel("Annual Income")
+
+# GMM 2D
+plt.subplot(1, 3, 2)
+plt.scatter(X['Age'], X['Annual_Income (k$)'], c=gmm_labels, cmap='viridis', s=40)
+plt.title("GMM Clustering")
+plt.xlabel("Age")
+plt.ylabel("Annual Income")
+
+# GMM 3D
+ax = plt.subplot(1, 3, 3, projection='3d')
+ax.scatter(X['Age'], X['Annual_Income (k$)'], X['Spending_Score'], c=gmm_labels, cmap='viridis', s=40)
+ax.set_title("GMM 3D View")
+ax.set_xlabel("Age")
+ax.set_ylabel("Annual Income")
+ax.set_zlabel("Spending Score")
+
+plt.tight_layout()
+plt.show()
+
+# Evaluation Metrics
+print("Adjusted Rand Index:", adjusted_rand_score(kmeans_labels, gmm_labels))
+print("Silhouette Score (k-Means):", silhouette_score(X_scaled, kmeans_labels))
+print("Silhouette Score (GMM):", silhouette_score(X_scaled, gmm_labels))
+
+# Cluster-wise means
+print("\nKMeans Cluster Averages:")
+print(data.groupby('KMeans_Cluster')[['Age', 'Annual_Income (k$)', 'Spending_Score', 'Visit_Frequency']].mean())
+
+# Preview with cluster labels
+print("\nSample Data with Clusters:")
+print(data.head())
