@@ -1,0 +1,81 @@
+import numpy as np
+import math
+import csv
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Load data from CSV
+def read_data(filename):
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        headers = next(reader)
+        metadata = headers
+        traindata = [row for row in reader]
+    return metadata, traindata
+
+class Node:
+    def __init__(self, attribute):
+        self.attribute = attribute
+        self.children = []
+        self.answer = ""
+
+def entropy(S):
+    items, counts = np.unique(S, return_counts=True)
+    probabilities = counts / counts.sum()
+    return -np.sum(probabilities * np.log2(probabilities))
+
+def subtables(data, col, delete):
+    dict = {}
+    items = np.unique(data[:, col])
+    for x in items:
+        subset = data[data[:, col] == x]
+        if delete:
+            subset = np.delete(subset, col, 1)
+        dict[x] = subset
+    return items, dict
+
+def gain_ratio(data, col):
+    total_entropy = entropy(data[:, -1])
+    items, dict = subtables(data, col, delete=False)
+    total_size = data.shape[0]
+
+    subset_entropy = sum((len(dict[item]) / total_size) * entropy(dict[item][:, -1]) for item in items)
+    split_info = sum((len(dict[item]) / total_size) * math.log(len(dict[item]) / total_size, 2) for item in items)
+    if split_info == 0:
+        return 0
+    return (total_entropy - subset_entropy) / -split_info
+
+def create_node(data, metadata):
+    if len(np.unique(data[:, -1])) == 1:
+        leaf = Node("")
+        leaf.answer = data[0, -1]
+        return leaf
+
+    gains = [gain_ratio(data, i) for i in range(len(metadata) - 1)]
+    best_attr_index = np.argmax(gains)
+    best_attr = metadata[best_attr_index]
+
+    node = Node(best_attr)
+    metadata = np.delete(metadata, best_attr_index)
+    items, dict = subtables(data, best_attr_index, delete=True)
+
+    for val in items:
+        child = create_node(dict[val], metadata.copy())
+        node.children.append((val, child))
+    return node
+
+def print_tree(node, indent=0):
+    if node.answer != "":
+        print(" " * indent + "→", node.answer)
+        return
+    print(" " * indent + node.attribute)
+    for val, child in node.children:
+        print(" " * (indent + 2) + str(val))
+        print_tree(child, indent + 4)
+
+# Run
+metadata, traindata = read_data("/content/drive/MyDrive/ML/ex-2-ds.csv")
+data = np.array(traindata)
+root = create_node(data, np.array(metadata))
+print_tree(root)
