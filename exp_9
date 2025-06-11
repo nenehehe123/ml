@@ -1,0 +1,34 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Local Regression at a given point x0
+def local_regression(x0, X, Y, tau):
+    x0 = np.r_[1, x0]        # add bias term
+    X = np.c_[np.ones(X.shape[0]), X]  # add bias to X
+    weights = np.exp(-np.sum((X - x0)**2, axis=1) / (2 * tau**2))  # Gaussian kernel
+    W = np.diag(weights)     # diagonal weight matrix
+
+    # Beta = (X^T W X)^-1 X^T W Y
+    beta = np.linalg.pinv(X.T @ W @ X) @ X.T @ W @ Y
+    return x0 @ beta         # prediction at x0
+
+# Draw the regression curve
+def draw(tau):
+    pred = [local_regression(x0, X, Y, tau) for x0 in domain]
+    plt.figure(figsize=(8, 4))
+    plt.plot(X, Y, 'o', label='Data')
+    plt.plot(domain, pred, 'r-', label=f'LWR Curve (tau={tau})')
+    plt.title(f'Locally Weighted Regression (tau = {tau})')
+    plt.legend()
+    plt.show()
+
+# Generate sample dataset
+X = np.linspace(-3, 3, num=1000)
+domain = X
+Y = np.log(np.abs(X ** 2 - 1) + 0.5)
+
+# Try different tau values
+draw(10)     # Smooth curve
+draw(0.1)    # More local
+draw(0.01)   # Very local
+draw(0.001)  # Highly sensitive
