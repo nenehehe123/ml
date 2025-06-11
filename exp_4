@@ -1,7 +1,8 @@
 import pandas as pd
+from sklearn import tree
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 from google.colab import drive
@@ -10,28 +11,40 @@ drive.mount('/content/drive')
 # Load CSV data
 data = pd.read_csv('/content/drive/MyDrive/ML/ex-4-ds.csv')
 
-# Separate features and target
+# Obtain Train data and Train output
 X = data.iloc[:, :-1]
+print('The first 5 values of train data are:\n', X.head())
+
 y = data.iloc[:, -1]
+print('The first 5 values of train output are:\n', y.head())
 
-# Label encode text values
-label_encoders = {}
-for column in X.columns:
-    le = LabelEncoder()
-    X[column] = le.fit_transform(X[column])
-    label_encoders[column] = le
+# Convert categorical features to numeric using LabelEncoder
+le_outlook = LabelEncoder()
+X['Outlook'] = le_outlook.fit_transform(X['Outlook'])
 
-y = LabelEncoder().fit_transform(y)
+le_Temperature = LabelEncoder()
+X['Temperature'] = le_Temperature.fit_transform(X['Temperature'])
 
-# Split into training and test sets (80% train, 20% test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+le_Humidity = LabelEncoder()
+X['Humidity'] = le_Humidity.fit_transform(X['Humidity'])
 
-# Train Naive Bayes model
-model = GaussianNB()
-model.fit(X_train, y_train)
+le_Windy = LabelEncoder()
+X['Windy'] = le_Windy.fit_transform(X['Windy'])
 
-# Predict and evaluate
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
+print('Now the Train data is:\n', X.head())
 
-print("Accuracy:", accuracy)
+# Encode output labels
+le_PlayTennis = LabelEncoder()
+y = le_PlayTennis.fit_transform(y)
+print('Now the Train output is:\n', y)
+
+# Split dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+
+# Train a Naive Bayes classifier
+classifier = GaussianNB()
+classifier.fit(X_train, y_train)
+
+# Predict and evaluate accuracy
+accuracy = accuracy_score(classifier.predict(X_test), y_test)
+print('Accuracy is:', accuracy)
