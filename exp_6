@@ -1,0 +1,45 @@
+!pip install pgmpy
+
+import pandas as pd
+from pgmpy.models import DiscreteBayesianNetwork
+from pgmpy.estimators import MaximumLikelihoodEstimator
+from pgmpy.inference import VariableElimination
+
+# Sample WHO-style dataset
+data = pd.DataFrame(columns=['Fever', 'Cough', 'TravelHistory', 'Contact', 'BreathingIssue', 'Corona'])
+
+# Adding example records (0 = No, 1 = Yes)
+data.loc[0] = [1, 1, 1, 1, 1, 1]  # All symptoms and positive
+data.loc[1] = [1, 1, 0, 0, 0, 0]  # Mild symptoms
+data.loc[2] = [0, 1, 1, 0, 0, 0]  # Traveled, no fever
+data.loc[3] = [1, 1, 1, 1, 0, 1]  # Travel + contact
+data.loc[4] = [0, 0, 0, 0, 0, 0]  # No symptoms
+data.loc[5] = [1, 0, 1, 0, 1, 1]  # Fever + travel + breathing issue
+
+# Define the Bayesian Network structure
+model = DiscreteBayesianNetwork([
+    ('Fever', 'Corona'),
+    ('Cough', 'Corona'),
+    ('TravelHistory', 'Corona'),
+    ('Contact', 'Corona'),
+    ('BreathingIssue', 'Corona')
+])
+
+# Train the model using Maximum Likelihood Estimator
+model.fit(data, estimator=MaximumLikelihoodEstimator)
+
+# Inference
+infer = VariableElimination(model)
+
+# Query: Predict Corona based on symptoms
+q = infer.query(variables=['Corona'], evidence={
+    'Fever': 1,
+    'Cough': 1,
+    'TravelHistory': 1,
+    'Contact': 1,
+    'BreathingIssue': 0
+})
+
+# Print the result
+print("\nProbability of Corona Infection:\n")
+print(q)
