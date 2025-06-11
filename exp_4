@@ -1,0 +1,37 @@
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Load CSV data
+data = pd.read_csv('/content/drive/MyDrive/ML/ex-4-ds.csv')
+
+# Separate features and target
+X = data.iloc[:, :-1]
+y = data.iloc[:, -1]
+
+# Label encode text values
+label_encoders = {}
+for column in X.columns:
+    le = LabelEncoder()
+    X[column] = le.fit_transform(X[column])
+    label_encoders[column] = le
+
+y = LabelEncoder().fit_transform(y)
+
+# Split into training and test sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Train Naive Bayes model
+model = GaussianNB()
+model.fit(X_train, y_train)
+
+# Predict and evaluate
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Accuracy:", accuracy)
