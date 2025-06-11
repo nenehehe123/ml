@@ -1,0 +1,37 @@
+import numpy as np
+import pandas as pd
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Load dataset
+data = pd.read_csv('/content/drive/MyDrive/ML/ex-1-ds.csv')
+concepts = np.array(data.iloc[:, 0:-1])
+target = np.array(data.iloc[:, -1])
+
+def learn(concepts, target):
+    specific_h = concepts[0].copy()
+    general_h = [["?" for _ in range(len(specific_h))] for _ in range(len(specific_h))]
+
+    for i, h in enumerate(concepts):
+        if target[i] == "Yes":
+            for x in range(len(specific_h)):
+                if h[x] != specific_h[x]:
+                    specific_h[x] = '?'
+                    general_h[x][x] = '?'
+        elif target[i] == "No":
+            for x in range(len(specific_h)):
+                if h[x] != specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = '?'
+        print(f"\nStep {i+1}")
+        print("Specific_h:", specific_h)
+        print("General_h:", general_h)
+
+    # Remove rows that are completely '?'
+    general_h = [g for g in general_h if g != ['?', '?', '?', '?', '?', '?']]
+    return specific_h, general_h
+
+s_final, g_final = learn(concepts, target)
+print("\nFinal Specific_h:", s_final)
+print("Final General_h:", g_final)
