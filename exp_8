@@ -1,0 +1,27 @@
+from sklearn.datasets import load_iris
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+import numpy as np
+
+# Load the Iris dataset
+dataset = load_iris()
+
+# Split the dataset (80% training, 20% testing)
+X_train, X_test, y_train, y_test = train_test_split(dataset["data"], dataset["target"], random_state=0)
+
+# Initialize KNN classifier with k = 1
+kn = KNeighborsClassifier(n_neighbors=1)
+
+# Train the classifier
+kn.fit(X_train, y_train)
+
+# Predict and compare with actual values
+for i in range(len(X_test)):
+    x = X_test[i]
+    x_new = np.array([x])  # Reshape for prediction
+    prediction = kn.predict(x_new)
+    print(f"TARGET = {y_test[i]} ({dataset['target_names'][y_test[i]]}) "
+          f"PREDICTED = {prediction[0]} ({dataset['target_names'][prediction[0]]})")
+
+# Print accuracy of the model
+print("\nAccuracy:", kn.score(X_test, y_test))
